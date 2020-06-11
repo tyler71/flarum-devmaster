@@ -1,0 +1,31 @@
+version: '3.3'
+
+services:
+  db:
+    image: mariadb:10.3.23-bionic
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./sqlbin:/sqlbin
+    ports:
+      - "9906:3306"
+  web:
+    build:
+        context: ./webserver
+        args:
+          DEV_SITE: ${DEV_SITE}
+
+    depends_on:
+      - db
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=0
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./site:/var/www/html
+    stdin_open: true
+    tty: true
