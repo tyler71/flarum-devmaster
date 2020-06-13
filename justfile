@@ -20,17 +20,13 @@ recreate-database:
     while [[ ! $(curl --silent {{containerDbHost}}:{{containerDbPort}}; echo $? | grep --quiet -E '23') ]]; do echo -n .; sleep 1; done
     echo Database online
 
-    for statement in \
-        " \
+    echo " \
         DROP DATABASE IF EXISTS ${MYSQL_DATABASE}; \
         CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE}; \
         CREATE USER IF NOT EXISTS \`${MYSQL_USER}\`@db IDENTIFIED BY '${MYSQL_PASSWORD}'; \
         GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO \`${MYSQL_USER}\`@db; \
         FLUSH PRIVILEGES; \
-        "
-    do 
-        echo "$statement" | docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 mysql -uroot -p${MYSQL_ROOT_PASSWORD}
-    done
+        " | docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 mysql -uroot -p${MYSQL_ROOT_PASSWORD}
 
     # Install forum
     echo Installing forum and adding admin user
