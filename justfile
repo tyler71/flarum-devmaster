@@ -20,12 +20,17 @@ recreate-database:
     while [[ ! $(curl --silent {{containerDbHost}}:{{containerDbPort}}; echo $? | grep --quiet -E '23') ]]; do echo -n .; sleep 1; done
     echo Database online
 
-    echo "DROP DATABASE IF EXISTS ${MYSQL_DATABASE};" | docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 mysql -uroot -p${MYSQL_ROOT_PASSWORD}
-    echo "CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};" | docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 mysql -uroot -p${MYSQL_ROOT_PASSWORD}
-    echo "CREATE USER IF NOT EXISTS \`${MYSQL_USER}\`@db IDENTIFIED BY '${MYSQL_PASSWORD}'" | docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 mysql -uroot -p${MYSQL_ROOT_PASSWORD}
-    echo "GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO \`${MYSQL_USER}\`@db;" | docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 mysql -uroot -p${MYSQL_ROOT_PASSWORD}
-    echo "FLUSH PRIVILEGES;" | docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 mysql -uroot -p${MYSQL_ROOT_PASSWORD}
-    
+    for statement in \
+        " \
+        DROP DATABASE IF EXISTS ${MYSQL_DATABASE}; \
+        CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE}; \
+        CREATE USER IF NOT EXISTS \`${MYSQL_USER}\`@db IDENTIFIED BY '${MYSQL_PASSWORD}'; \
+        GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO \`${MYSQL_USER}\`@db; \
+        FLUSH PRIVILEGES; \
+        "
+    do 
+        echo "$statement" | docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 mysql -uroot -p${MYSQL_ROOT_PASSWORD}
+    done
 
     # Install forum
     echo Installing forum and adding admin user
