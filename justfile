@@ -4,13 +4,6 @@ containerDbHost := "127.0.0.1"
 start:
     #!/usr/bin/env bash
     docker-compose up -d
-
-    if [ -n "$(find "./site" -maxdepth 0 -type d -empty 2>/dev/null)" ]; 
-    then 
-        docker exec "$COMPOSE_PROJECT_NAME"_web_1 composer create-project flarum/flarum /var/www/html --stability=dev-master; 
-    fi
-    cp data/composer/composer.json data/composer/composer.lock site/
-    docker exec "$COMPOSE_PROJECT_NAME"_web_1 composer install
     just recreate-database
     echo ${DEV_SITE} is ready
 stop:

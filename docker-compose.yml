@@ -24,7 +24,7 @@ services:
       - net.ipv4.ip_unprivileged_port_start=0
     ports:
       - "80:80"
-    volumes:
-      - ./site:/var/www/html
+#    volumes:
+#      - ./site:/var/www/html
     stdin_open: true
     tty: true

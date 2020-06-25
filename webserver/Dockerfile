@@ -1,11 +1,10 @@
-FROM php:7.3.18-apache 
+FROM php:7.3-apache 
 
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 ENV DEBIAN_FRONTEND=noninteractive
 ARG DEV_SITE
 
-RUN a2enmod rewrite \
-    && a2enmod ssl
+RUN a2enmod rewrite
 
 RUN useradd --system --create-home --home-dir /home/webuser --shell /bin/bash \
         --gid root --groups sudo --uid 1000 webuser
@@ -29,3 +28,8 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
     && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 USER 1000
+
+RUN composer create-project flarum/flarum /var/www/html --stability=dev
+
+RUN /usr/local/bin/composer require \
+    fof/drafts
