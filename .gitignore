@@ -1,3 +1,5 @@
 .env
 ssl.*
 site/
+
+*.swp
