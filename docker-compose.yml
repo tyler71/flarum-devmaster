@@ -15,9 +15,6 @@ services:
   web:
     build:
         context: ./webserver
-        args:
-          DEV_SITE: ${DEV_SITE}
-
     depends_on:
       - db
     sysctls:
