@@ -13,7 +13,7 @@ services:
     ports:
       - "9906:3306"
   web:
-    image: tyler71/flarum-devmaster
+    image: tyler71/flarum-devmaster-webserver
     depends_on:
       - db
     sysctls:

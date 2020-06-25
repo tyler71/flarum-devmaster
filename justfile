@@ -10,8 +10,8 @@ stop:
     docker-compose down --volumes
 enter:
     docker container exec -it "${COMPOSE_PROJECT_NAME}"_web_1 bash
-build:
-    docker-compose build
+pull:
+    docker-compose pull
 recreate-database:
     #!/usr/bin/env bash
     set -e
