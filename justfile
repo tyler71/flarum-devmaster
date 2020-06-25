@@ -12,12 +12,9 @@ enter:
     docker container exec -it "${COMPOSE_PROJECT_NAME}"_web_1 bash
 build:
     docker-compose build
-save:
-    cp site/composer.json site/composer.lock data/composer/
 recreate-database:
     #!/usr/bin/env bash
     set -e
-    rm -f site/config.php
     echo Waiting for database server to come online..
     while [[ ! $(curl --silent {{containerDbHost}}:{{containerDbPort}}; echo $? | grep --quiet -E '23') ]]; do echo -n .; sleep 1; done
     echo Database online
@@ -32,7 +29,8 @@ recreate-database:
 
     # Install forum
     echo Installing forum and adding admin user
-    curl "http://${DEV_SITE}/" --insecure --data-raw 'forumTitle='${SITE_TITLE}'&mysqlHost=db&mysqlDatabase='${MYSQL_DATABASE}'&mysqlUsername='${MYSQL_USER}'&mysqlPassword='${MYSQL_PASSWORD}'&tablePrefix=&adminUsername='${SITE_ADMIN}'&adminEmail=null%40null.null&adminPassword='${SITE_ADMIN_PASS}'&adminPasswordConfirmation='${SITE_ADMIN_PASS}
+    docker exec "$COMPOSE_PROJECT_NAME"_web_1 rm -f config.php
+    curl "http://${DEV_SITE}/" --insecure --silent --data-raw 'forumTitle='${SITE_TITLE}'&mysqlHost=db&mysqlDatabase='${MYSQL_DATABASE}'&mysqlUsername='${MYSQL_USER}'&mysqlPassword='${MYSQL_PASSWORD}'&tablePrefix=&adminUsername='${SITE_ADMIN}'&adminEmail=null%40null.null&adminPassword='${SITE_ADMIN_PASS}'&adminPasswordConfirmation='${SITE_ADMIN_PASS}
 
     echo " \
         INSERT INTO api_keys (\`key\`, created_at) VALUES (\"${MASTER_TOKEN}\", NOW()); \
@@ -41,6 +39,6 @@ recreate-database:
 
     # Add initial discussion
     echo Adding initial discussion
-    curl "http://${DEV_SITE}"/api/discussions --insecure -H "Authorization: Token ${MASTER_TOKEN}; userId=1" -H 'Content-Type: application/json; charset=utf-8' --data-raw '{"data":{"type":"discussions","attributes":{"title":"INFO","content":"Welcome to Devflarum\n\nUSER: admin\nPASSWORD: admin55"},"relationships":{"tags":{"data":[{"type":"tags","id":"1"}]}}}}' 1> /dev/null
+    curl "http://${DEV_SITE}"/api/discussions --insecure --silent -H "Authorization: Token ${MASTER_TOKEN}; userId=1" -H 'Content-Type: application/json; charset=utf-8' --data-raw '{"data":{"type":"discussions","attributes":{"title":"INFO","content":"Welcome to Devflarum\n\nUSER: admin\nPASSWORD: admin55"},"relationships":{"tags":{"data":[{"type":"tags","id":"1"}]}}}}' 1> /dev/null
 
     echo Database recreated
