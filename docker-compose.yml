@@ -10,8 +10,6 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - ./sqlbin:/sqlbin
-    ports:
-      - "9906:3306"
   web:
     image: tyler71/flarum-devmaster-webserver
     depends_on:

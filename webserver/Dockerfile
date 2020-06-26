@@ -16,7 +16,8 @@ RUN composer require \
     fof/merge-discussions:dev-master \
     fof/moderator-notes:dev-master \
     askvortsov/flarum-moderator-warnings:dev-master \
-    mickmelon/flarum-ext-coloured-usernames:dev-master
+    mickmelon/flarum-ext-coloured-usernames:dev-master \
+    && composer cache-clear
 
 
 FROM php:7.3-apache 

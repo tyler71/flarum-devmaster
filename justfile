@@ -1,6 +1,3 @@
-containerDbPort := "9906"
-containerDbHost := "127.0.0.1"
-
 start:
     #!/usr/bin/env bash
     docker-compose up -d
@@ -16,7 +13,8 @@ recreate-database:
     #!/usr/bin/env bash
     set -e
     echo Waiting for database server to come online..
-    while [[ ! $(curl --silent {{containerDbHost}}:{{containerDbPort}}; echo $? | grep --quiet -E '23') ]]; do echo -n .; sleep 1; done
+    docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 bash -c \
+      "while ! mysql --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} -e 'SELECT 1' &> /dev/null; do echo -n .; sleep 1; done"
     echo Database online
 
     echo " \
