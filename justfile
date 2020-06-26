@@ -1,19 +1,26 @@
 start:
     #!/usr/bin/env bash
     docker-compose up -d
+    DB=$(docker inspect -f '{{ "{{" }} .Name {{ "}}" }}' $(docker-compose ps -q db) | cut -c2-)
+    WEB=$(docker inspect -f '{{ "{{" }} .Name {{ "}}" }}' $(docker-compose ps -q web) | cut -c2-)
+
     just recreate-database
     echo ${DEV_SITE} is ready
 stop:
     docker-compose down --volumes
 enter:
-    docker container exec -it "${COMPOSE_PROJECT_NAME}"_web_1 bash
+    WEB=$(docker inspect -f '{{ "{{" }} .Name {{ "}}" }}' $(docker-compose ps -q web) | cut -c2-)
+    docker container exec -it "$WEB" bash
 pull:
     docker-compose pull
 recreate-database:
     #!/usr/bin/env bash
     set -e
+    DB=$(docker inspect -f '{{ "{{" }} .Name {{ "}}" }}' $(docker-compose ps -q db) | cut -c2-)
+    WEB=$(docker inspect -f '{{ "{{" }} .Name {{ "}}" }}' $(docker-compose ps -q web) | cut -c2-)
+
     echo Waiting for database server to come online..
-    docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 bash -c \
+    docker exec -i "$DB" bash -c \
       "while ! mysql --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} -e 'SELECT 1' &> /dev/null; do echo -n .; sleep 1; done"
     echo Database online
 
@@ -23,17 +30,17 @@ recreate-database:
         CREATE USER IF NOT EXISTS \`${MYSQL_USER}\`@db IDENTIFIED BY '${MYSQL_PASSWORD}'; \
         GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO \`${MYSQL_USER}\`@db; \
         FLUSH PRIVILEGES; \
-        " | docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 mysql -uroot -p${MYSQL_ROOT_PASSWORD}
+        " | docker exec -i "$DB" mysql -uroot -p${MYSQL_ROOT_PASSWORD}
 
     # Install forum
     echo Installing forum and adding admin user
-    docker exec "$COMPOSE_PROJECT_NAME"_web_1 rm -f config.php
+    docker exec "$WEB" rm -f config.php
     curl "http://${DEV_SITE}/" --insecure --silent --data-raw 'forumTitle='${SITE_TITLE}'&mysqlHost=db&mysqlDatabase='${MYSQL_DATABASE}'&mysqlUsername='${MYSQL_USER}'&mysqlPassword='${MYSQL_PASSWORD}'&tablePrefix=&adminUsername='${SITE_ADMIN}'&adminEmail=null%40null.null&adminPassword='${SITE_ADMIN_PASS}'&adminPasswordConfirmation='${SITE_ADMIN_PASS}
 
     echo " \
         INSERT INTO api_keys (\`key\`, created_at) VALUES (\"${MASTER_TOKEN}\", NOW()); \
         INSERT INTO users (username, email, is_email_confirmed, password, joined_at) VALUES (\"test55\", \"null2@null.null\", 1, \"\$2y$10$TCun40uWtmG9Cn6cPVhtlOQo4c9NpqTY1KjRkOaovIDMpG.aBClgq\", NOW()); \
-        " | docker exec -i "$COMPOSE_PROJECT_NAME"_db_1 mysql -u${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DATABASE}
+        " | docker exec -i "$DB" mysql -u${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DATABASE}
 
     # Add initial discussion
     echo Adding initial discussion
