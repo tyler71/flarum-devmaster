@@ -11,6 +11,14 @@ stop:
 enter:
     WEB=$(docker inspect -f '{{ "{{" }} .Name {{ "}}" }}' $(docker-compose ps -q web) | cut -c2-)
     docker container exec -it "$WEB" bash
+export:
+    #!/usr/bin/env bash
+    DB=$(docker inspect -f '{{ "{{" }} .Name {{ "}}" }}' $(docker-compose ps -q db) | cut -c2-)
+    docker exec -i "$DB" bash -c \
+        "mysqldump --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} ${MYSQL_DATABASE}" \
+        > db.sql
+    tar -zcf $(date '+%m-%d-%Y')_devmaster.tar.gz site db.sql
+    rm db.sql
 pull:
     docker-compose pull
 recreate-database:
