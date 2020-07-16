@@ -5,8 +5,10 @@ RUN apk add git zip
 WORKDIR /build
 
 LABEL "FLARUM_VERSION"="0.1.0-beta.13"
-RUN composer create-project flarum/flarum . --stability=dev
+RUN composer create-project flarum/flarum . --stability=dev \
+    && composer clearcache
 
+LABEL "EXT_VERSION"="1"
 RUN composer require \
     fof/drafts:dev-master \
     fof/user-bio:dev-master \
@@ -17,7 +19,7 @@ RUN composer require \
     fof/moderator-notes:dev-master \
     askvortsov/flarum-moderator-warnings:dev-master \
     mickmelon/flarum-ext-coloured-usernames:dev-master \
-    && composer cache-clear
+    && composer clearcache
 
 
 FROM php:7.3-apache 
@@ -27,8 +29,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN a2enmod rewrite
 
-RUN useradd --system --create-home --home-dir /home/webuser --shell /bin/bash \
-        --gid root --groups sudo --uid 1000 webuser
+RUN useradd --system --create-home --home-dir /home/devflarum --shell /bin/bash \
+        --gid root --groups sudo --uid 1000 devflarum
 
 RUN apt-get update && apt-get install -y unzip \
     && rm -rf /var/lib/apt/lists/*
